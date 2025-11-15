@@ -65,7 +65,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ isOpen, onClose }) => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+    return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
   // フィルター適用
@@ -252,6 +252,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ isOpen, onClose }) => {
                   <th className="text-right py-2 text-gray-600 dark:text-gray-400">数量</th>
                   <th className="text-left py-2 text-gray-600 dark:text-gray-400">単位</th>
                   <th className="text-left py-2 text-gray-600 dark:text-gray-400">登録日</th>
+                  <th className="text-left py-2 text-gray-600 dark:text-gray-400">保管場所</th>
                   <th className="text-center py-2 text-gray-600 dark:text-gray-400">操作</th>
                 </tr>
               </thead>
@@ -262,6 +263,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ isOpen, onClose }) => {
                     <td className="py-2 text-right text-gray-800 dark:text-white">{item.quantity}</td>
                     <td className="py-2 text-gray-600 dark:text-gray-400">{item.unit}</td>
                     <td className="py-2 text-gray-600 dark:text-gray-400">{formatDate(item.created_at)}</td>
+                    <td className="py-2 text-gray-600 dark:text-gray-400">{item.storage_location || '-'}</td>
                     <td className="py-2">
                       <div className="flex gap-2 justify-center">
                         <button
