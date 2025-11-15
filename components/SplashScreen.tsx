@@ -56,7 +56,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           alt={`Morizo Splash ${currentImage}`}
           width={400}
           height={400}
-          className="rounded-lg shadow-lg"
+          className="rounded-[3rem] shadow-lg"
           priority
         />
         
