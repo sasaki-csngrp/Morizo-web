@@ -209,6 +209,28 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
         </div>
+        
+        {/* コマンドボタン */}
+        <div className="mt-4 space-y-2">
+          <button
+            onClick={handleAddNew}
+            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            + 新規追加
+          </button>
+          <button
+            onClick={() => setIsCSVUploadModalOpen(true)}
+            className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+          >
+            📄 CSVアップロード
+          </button>
+          <button
+            onClick={() => setIsOCRModalOpen(true)}
+            className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+          >
+            📷 レシート読み込み
+          </button>
+        </div>
       </div>
       
       <div className="p-4">
@@ -229,7 +251,6 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ isOpen, onClose }) => {
                   <th className="text-left py-2 text-gray-600 dark:text-gray-400">アイテム名</th>
                   <th className="text-right py-2 text-gray-600 dark:text-gray-400">数量</th>
                   <th className="text-left py-2 text-gray-600 dark:text-gray-400">単位</th>
-                  <th className="text-left py-2 text-gray-600 dark:text-gray-400">場所</th>
                   <th className="text-left py-2 text-gray-600 dark:text-gray-400">登録日</th>
                   <th className="text-center py-2 text-gray-600 dark:text-gray-400">操作</th>
                 </tr>
@@ -240,7 +261,6 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ isOpen, onClose }) => {
                     <td className="py-2 text-gray-800 dark:text-white">{item.item_name}</td>
                     <td className="py-2 text-right text-gray-800 dark:text-white">{item.quantity}</td>
                     <td className="py-2 text-gray-600 dark:text-gray-400">{item.unit}</td>
-                    <td className="py-2 text-gray-600 dark:text-gray-400">{item.storage_location || '-'}</td>
                     <td className="py-2 text-gray-600 dark:text-gray-400">{formatDate(item.created_at)}</td>
                     <td className="py-2">
                       <div className="flex gap-2 justify-center">
@@ -265,28 +285,6 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ isOpen, onClose }) => {
             </table>
           </div>
         )}
-        
-        {/* 新規追加ボタン */}
-        <div className="mt-4 space-y-2">
-          <button
-            onClick={handleAddNew}
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            + 新規追加
-          </button>
-          <button
-            onClick={() => setIsCSVUploadModalOpen(true)}
-            className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-          >
-            📄 CSVアップロード
-          </button>
-          <button
-            onClick={() => setIsOCRModalOpen(true)}
-            className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-          >
-            📷 レシートOCR
-          </button>
-        </div>
       </div>
       
       {/* 編集モーダル */}
@@ -308,7 +306,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ isOpen, onClose }) => {
         />
       )}
       
-      {/* レシートOCRモーダル */}
+      {/* レシート読み込みモーダル */}
       {isOCRModalOpen && (
         <InventoryOCRModal
           isOpen={isOCRModalOpen}

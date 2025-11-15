@@ -51,8 +51,57 @@ export default function UserProfile({
 
   return (
     <>
-      {/* ユーザーアイコン */}
-      <div className="flex items-center justify-end mb-4">
+      {/* ユーザーアイコンとボタン */}
+      <div className="flex items-center justify-end gap-2 mb-4">
+        {/* 在庫一覧ボタン */}
+        {onOpenInventory && (
+          <button
+            onClick={onOpenInventory}
+            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="在庫一覧を表示"
+          >
+            <svg
+              className="w-5 h-5 text-gray-700 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+              />
+            </svg>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">在庫</span>
+          </button>
+        )}
+
+        {/* 履歴ボタン */}
+        {onOpenHistory && (
+          <button
+            onClick={onOpenHistory}
+            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="レシピ履歴を表示"
+          >
+            <svg
+              className="w-5 h-5 text-gray-700 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">履歴</span>
+          </button>
+        )}
+
+        {/* ユーザーアイコン */}
         <button
           onClick={() => setShowProfileModal(true)}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -102,26 +151,6 @@ export default function UserProfile({
 
             {/* ボタン一覧（縦並び） */}
             <div className="space-y-3 mb-4">
-              {/* 在庫一覧を見る */}
-              {onOpenInventory && (
-                <button
-                  onClick={onOpenInventory}
-                  className="w-full px-4 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-lg transition-colors duration-200 font-semibold"
-                >
-                  在庫一覧を見る
-                </button>
-              )}
-
-              {/* レシピ履歴を見る */}
-              {onOpenHistory && (
-                <button
-                  onClick={onOpenHistory}
-                  className="w-full px-4 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-lg transition-colors duration-200 font-semibold"
-                >
-                  レシピ履歴を見る
-                </button>
-              )}
-
               {/* トークンをコピー */}
               <button
                 onClick={handleCopyToken}
