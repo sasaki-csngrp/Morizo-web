@@ -10,8 +10,8 @@ interface EditableItemListProps {
   onToggleItem: (index: number) => void;
   onSelectAll: () => void;
   onClearSelection: () => void;
-  units: string[];
-  storageLocations: string[];
+  units: readonly string[];
+  storageLocations: readonly string[];
 }
 
 /**
