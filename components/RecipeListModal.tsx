@@ -98,8 +98,8 @@ const RecipeListModal: React.FC<RecipeListModalProps> = ({
                             ? 'bg-green-500' 
                             : 'bg-blue-500'
                       }`}>
-                        {candidate.source === 'llm' ? 'LLM提案' : 
-                         candidate.source === 'rag' ? 'RAG検索' : 'Web検索'}
+                        {candidate.source === 'llm' ? '斬新提案' : 
+                         candidate.source === 'rag' ? '伝統提案' : 'Web検索'}
                       </span>
                     </div>
                   )}
