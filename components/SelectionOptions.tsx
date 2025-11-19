@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { RecipeCandidate } from '@/types/menu';
 import { authenticatedFetch } from '@/lib/auth';
+import { RecipeListModalSelectionInfo } from '@/hooks/useModalManagement';
 
 interface SelectionOptionsProps {
   candidates: RecipeCandidate[];
   onSelect: (selection: number, selectionResult?: any) => void;  // Phase 5B-2: レスポンスを受け取れるように拡張
   onViewDetails?: (recipe: RecipeCandidate) => void;
-  onViewList?: (candidates: RecipeCandidate[]) => void;
+  onViewList?: (candidates: RecipeCandidate[], selectionInfo?: RecipeListModalSelectionInfo) => void;
   taskId: string;
   sseSessionId: string;
   isLoading?: boolean;
@@ -258,7 +259,18 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
         {/* レシピ一覧を見るボタン - 常に表示 */}
         {onViewList && (
           <button 
-            onClick={() => onViewList(candidates)}
+            onClick={() => {
+              // 段階的提案の場合、選択に必要な情報も一緒に渡す
+              const selectionInfo: RecipeListModalSelectionInfo = {
+                taskId,
+                sseSessionId,
+                onSelect,
+                currentStage,
+                onNextStageRequested,
+                isLoading
+              };
+              onViewList(candidates, selectionInfo);
+            }}
             disabled={isLoading || isConfirming}
             className="px-6 py-3 rounded-lg font-medium transition-colors duration-200 bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           >

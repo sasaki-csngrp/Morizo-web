@@ -9,6 +9,7 @@ import SelectedRecipeCard from '@/components/SelectedRecipeCard';
 import { ChatMessage } from '@/types/chat';
 import { RecipeCandidate } from '@/types/menu';
 import { isMenuResponse, parseMenuResponseUnified } from '@/lib/menu-parser';
+import { RecipeListModalSelectionInfo } from '@/hooks/useModalManagement';
 
 interface ChatMessageListProps {
   chatMessages: ChatMessage[];
@@ -26,7 +27,7 @@ interface ChatMessageListProps {
   openRecipeModal: (response: string, result?: unknown) => void;
   onSelect: (selection: number, selectionResult?: any) => void;
   onViewDetails: (recipe: RecipeCandidate) => void;
-  onViewList: (candidates: RecipeCandidate[]) => void;
+  onViewList: (candidates: RecipeCandidate[], selectionInfo?: RecipeListModalSelectionInfo) => void;
   onRequestMore: (sseSessionId: string) => void;
   onNextStageRequested: () => void;
   createOnCompleteHandler: (message: ChatMessage) => (result: unknown) => void;

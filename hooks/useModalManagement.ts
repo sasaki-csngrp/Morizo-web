@@ -2,6 +2,18 @@ import { useState } from 'react';
 import { RecipeCandidate } from '@/types/menu';
 
 /**
+ * レシピ一覧モーダルで選択に必要な情報
+ */
+export interface RecipeListModalSelectionInfo {
+  taskId: string;
+  sseSessionId: string;
+  onSelect: (selection: number, selectionResult?: any) => void;
+  currentStage?: 'main' | 'sub' | 'soup';
+  onNextStageRequested?: () => void;
+  isLoading?: boolean;
+}
+
+/**
  * モーダル管理フック
  * レシピ詳細モーダル、レシピ一覧モーダル、履歴パネル、在庫パネルの状態を管理
  */
@@ -10,6 +22,7 @@ export function useModalManagement() {
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeCandidate | null>(null);
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [listModalCandidates, setListModalCandidates] = useState<RecipeCandidate[]>([]);
+  const [listModalSelectionInfo, setListModalSelectionInfo] = useState<RecipeListModalSelectionInfo | null>(null);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [isInventoryPanelOpen, setIsInventoryPanelOpen] = useState(false);
 
@@ -18,8 +31,12 @@ export function useModalManagement() {
     setIsDetailModalOpen(true);
   };
 
-  const handleViewList = (candidates: RecipeCandidate[]) => {
+  const handleViewList = (
+    candidates: RecipeCandidate[],
+    selectionInfo?: RecipeListModalSelectionInfo
+  ) => {
     setListModalCandidates(candidates);
+    setListModalSelectionInfo(selectionInfo || null);
     setIsListModalOpen(true);
   };
 
@@ -31,6 +48,7 @@ export function useModalManagement() {
   const closeListModal = () => {
     setIsListModalOpen(false);
     setListModalCandidates([]);
+    setListModalSelectionInfo(null);
   };
 
   const closeHistoryPanel = () => {
@@ -58,6 +76,7 @@ export function useModalManagement() {
     // 一覧モーダル
     isListModalOpen,
     listModalCandidates,
+    listModalSelectionInfo,
     handleViewList,
     closeListModal,
     // 履歴パネル

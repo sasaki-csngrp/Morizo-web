@@ -33,6 +33,7 @@ export default function ChatSection({
     closeDetailModal,
     isListModalOpen,
     listModalCandidates,
+    listModalSelectionInfo,
     handleViewList,
     closeListModal,
   } = useModalManagement();
@@ -135,6 +136,7 @@ export default function ChatSection({
           isOpen={isListModalOpen}
           onClose={closeListModal}
           candidates={listModalCandidates}
+          selectionInfo={listModalSelectionInfo}
         />
       )}
       

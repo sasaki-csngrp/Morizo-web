@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { RecipeCandidate } from '@/types/menu';
+import { RecipeListModalSelectionInfo } from '@/hooks/useModalManagement';
 
 interface SelectedRecipeCardProps {
   main?: RecipeCandidate;
@@ -9,7 +10,7 @@ interface SelectedRecipeCardProps {
   soup?: RecipeCandidate;
   onSave?: () => void;
   onViewDetails?: (recipe: RecipeCandidate) => void;
-  onViewList?: (candidates: RecipeCandidate[]) => void;
+  onViewList?: (candidates: RecipeCandidate[], selectionInfo?: RecipeListModalSelectionInfo) => void;
   isSaving?: boolean;
   savedMessage?: string;
 }
