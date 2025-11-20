@@ -211,22 +211,6 @@ const RecipeListModal: React.FC<RecipeListModalProps> = ({
                       </p>
                     </div>
                   )}
-                  
-                  {/* ソース情報 */}
-                  {candidate.source && (
-                    <div className="mb-3">
-                      <span className={`inline-block px-3 py-1 rounded-full text-white text-xs ${
-                        candidate.source === 'llm' 
-                          ? 'bg-purple-500' 
-                          : candidate.source === 'rag' 
-                            ? 'bg-green-500' 
-                            : 'bg-blue-500'
-                      }`}>
-                        {candidate.source === 'llm' ? '斬新提案' : 
-                         candidate.source === 'rag' ? '伝統提案' : 'Web検索'}
-                      </span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
