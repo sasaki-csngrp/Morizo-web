@@ -19,6 +19,7 @@ interface ChatMessageListProps {
     main?: RecipeCandidate;
     sub?: RecipeCandidate;
     soup?: RecipeCandidate;
+    other?: RecipeCandidate;
   };
   isSavingMenu: boolean;
   savedMessage: string;
@@ -227,12 +228,13 @@ export default function ChatMessageList({
       </div>
       
       {/* Phase 5B-3: 選択済みレシピの表示 */}
-      {(selectedRecipes.main || selectedRecipes.sub || selectedRecipes.soup) && (
+      {(selectedRecipes.main || selectedRecipes.sub || selectedRecipes.soup || selectedRecipes.other) && (
         <div className="mt-6">
           <SelectedRecipeCard
             main={selectedRecipes.main}
             sub={selectedRecipes.sub}
             soup={selectedRecipes.soup}
+            other={selectedRecipes.other}
             onSave={onSaveMenu}
             onViewList={onViewList}
             isSaving={isSavingMenu}

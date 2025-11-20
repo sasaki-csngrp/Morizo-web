@@ -8,7 +8,7 @@ export interface RecipeListModalSelectionInfo {
   taskId: string;
   sseSessionId: string;
   onSelect: (selection: number, selectionResult?: any) => void;
-  currentStage?: 'main' | 'sub' | 'soup';
+  currentStage?: 'main' | 'sub' | 'soup' | 'other';
   onNextStageRequested?: () => void;
   isLoading?: boolean;
 }

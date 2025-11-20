@@ -8,6 +8,7 @@ interface SelectedRecipeCardProps {
   main?: RecipeCandidate;
   sub?: RecipeCandidate;
   soup?: RecipeCandidate;
+  other?: RecipeCandidate;
   onSave?: () => void;
   onViewDetails?: (recipe: RecipeCandidate) => void;
   onViewList?: (candidates: RecipeCandidate[], selectionInfo?: RecipeListModalSelectionInfo) => void;
@@ -19,16 +20,19 @@ const SelectedRecipeCard: React.FC<SelectedRecipeCardProps> = ({
   main,
   sub,
   soup,
+  other,
   onSave,
   onViewDetails,
   onViewList,
   isSaving = false,
   savedMessage
 }) => {
-  const isComplete = main && sub && soup;
-  const stage = main && !sub ? 'main' : main && sub && !soup ? 'sub' : 'completed';
+  // otherカテゴリの場合は単体動作として完了
+  const isComplete = other ? true : (main && sub && soup);
+  const stage = other ? 'completed' : (main && !sub ? 'main' : main && sub && !soup ? 'sub' : 'completed');
   
   const getTitle = () => {
+    if (other) return '✅ レシピが確定しました';
     if (isComplete) return '🎉 献立が完成しました！';
     if (sub) return '✅ 副菜が確定しました';
     if (main) return '✅ 主菜が確定しました';
@@ -103,6 +107,24 @@ const SelectedRecipeCard: React.FC<SelectedRecipeCardProps> = ({
             </div>
           </div>
         )}
+        
+        {other && (
+          <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="flex items-start">
+              <span className="text-2xl mr-2">🍜</span>
+              <div className="flex-1">
+                <p className="font-medium text-gray-800 dark:text-white">
+                  その他: {other.title}
+                </p>
+                {other.ingredients && other.ingredients.length > 0 && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    食材: {other.ingredients.join(', ')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="mt-4 flex flex-col sm:flex-row gap-3">
@@ -115,13 +137,14 @@ const SelectedRecipeCard: React.FC<SelectedRecipeCardProps> = ({
             {isSaving ? '保存中...' : '献立を保存'}
           </button>
         )}
-        {onViewList && (main || sub || soup) && (
+        {onViewList && (main || sub || soup || other) && (
           <button
             onClick={() => {
               const recipes = [];
               if (main) recipes.push(main);
               if (sub) recipes.push(sub);
               if (soup) recipes.push(soup);
+              if (other) recipes.push(other);
               onViewList(recipes);
             }}
             className="px-6 py-3 rounded-lg font-medium transition-colors duration-200 bg-indigo-600 hover:bg-indigo-700 text-white"

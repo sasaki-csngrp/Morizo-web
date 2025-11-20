@@ -16,7 +16,7 @@ interface SelectionOptionsProps {
   onRequestMore?: (sseSessionId: string) => void; // 追加提案用のコールバック
   isLatestSelection?: boolean; // 最新の選択候補かどうか
   // Phase 3D: 段階情報
-  currentStage?: 'main' | 'sub' | 'soup';
+  currentStage?: 'main' | 'sub' | 'soup' | 'other';
   usedIngredients?: string[];
   menuCategory?: 'japanese' | 'western' | 'chinese';
   // Phase 3C-3: 次の段階リクエスト用のコールバック
@@ -186,7 +186,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
   }
 
   // Phase 3D: 段階名の表示テキスト
-  const stageLabel = currentStage === 'main' ? '主菜' : currentStage === 'sub' ? '副菜' : currentStage === 'soup' ? '汁物' : '';
+  const stageLabel = currentStage === 'main' ? '主菜' : currentStage === 'sub' ? '副菜' : currentStage === 'soup' ? '汁物' : currentStage === 'other' ? 'その他' : '';
   const menuCategoryLabel = menuCategory === 'japanese' ? '和食' : menuCategory === 'western' ? '洋食' : menuCategory === 'chinese' ? '中華' : '';
 
   return (
