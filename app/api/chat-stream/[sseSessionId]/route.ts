@@ -76,23 +76,69 @@ export async function GET(
           return;
         }
 
+        let isStreamClosed = false;
+
         const pump = async () => {
           try {
             while (true) {
               const { done, value } = await reader.read();
               if (done) {
-                controller.close();
+                if (!isStreamClosed) {
+                  isStreamClosed = true;
+                  controller.close();
+                }
                 break;
               }
-              controller.enqueue(value);
+              if (!isStreamClosed) {
+                try {
+                  controller.enqueue(value);
+                } catch (enqueueError) {
+                  // コントローラーが既に閉じられている場合（クライアント切断など）
+                  if (enqueueError instanceof TypeError && enqueueError.message.includes('Invalid state')) {
+                    ServerLogger.debug(LogCategory.API, 'ストリームが既に閉じられています（クライアント切断の可能性）');
+                    isStreamClosed = true;
+                    break;
+                  }
+                  throw enqueueError;
+                }
+              }
             }
           } catch (error) {
-            ServerLogger.error(LogCategory.API, 'ストリーミング転送エラー', error);
-            controller.error(error);
+            // ERR_INVALID_STATEは通常、クライアントが接続を切断した場合に発生する正常な動作
+            if (error instanceof TypeError && error.message.includes('Invalid state')) {
+              ServerLogger.debug(LogCategory.API, 'ストリーム状態エラー（クライアント切断の可能性）', { 
+                code: 'ERR_INVALID_STATE' 
+              });
+            } else if (error instanceof Error && error.name === 'AbortError') {
+              ServerLogger.debug(LogCategory.API, 'ストリームが中断されました（タイムアウトまたはクライアント切断）');
+            } else {
+              ServerLogger.error(LogCategory.API, 'ストリーミング転送エラー', error);
+            }
+            
+            // ストリームがまだ開いている場合のみエラーを送信
+            if (!isStreamClosed) {
+              try {
+                controller.error(error);
+              } catch (closeError) {
+                // コントローラーが既に閉じられている場合は無視
+                ServerLogger.debug(LogCategory.API, 'コントローラーが既に閉じられています');
+              }
+            }
+          } finally {
+            // リーダーを解放
+            try {
+              reader.releaseLock();
+            } catch (releaseError) {
+              // 既に解放されている場合は無視
+            }
           }
         };
 
         pump();
+      },
+      cancel() {
+        // クライアントが接続を切断した場合
+        ServerLogger.debug(LogCategory.API, 'ストリームがキャンセルされました（クライアント切断）');
       },
     });
 
