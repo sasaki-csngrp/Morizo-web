@@ -77,16 +77,37 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await aiResponse.json();
+    const responseText = data.response || data.message || '';
     ServerLogger.info(LogCategory.API, 'Morizo AIからのレスポンス受信完了', { 
-      responseLength: data.response?.length || data.message?.length 
+      responseLength: responseText.length 
     });
+
+    // ヘルプ応答の検知: ヘルプ全体概要または機能別詳細の応答かどうか
+    const isHelpResponse = responseText && (
+      responseText.includes('4つの便利な機能') ||
+      responseText.includes('どの機能について知りたいですか') ||
+      responseText.includes('食材を追加する') ||
+      responseText.includes('食材を削除する') ||
+      responseText.includes('主菜を選ぶ') ||
+      responseText.includes('副菜を選ぶ') ||
+      responseText.includes('汁物を選ぶ') ||
+      responseText.includes('在庫一覧を確認する') ||
+      responseText.includes('レシピ履歴を確認する')
+    );
+
+    if (isHelpResponse) {
+      ServerLogger.debug(LogCategory.API, 'ヘルプ応答を検知しました', { 
+        responseLength: responseText.length 
+      });
+    }
 
     timer();
     logApiCall('POST', '/api/chat', 200, undefined);
     
     const nextResponse = NextResponse.json({
-      response: data.response || data.message || 'レスポンスを取得できませんでした',
+      response: responseText || 'レスポンスを取得できませんでした',
       success: true,
+      is_help_response: isHelpResponse || false, // モバイル版がストリーミング接続を開始しないようにするためのフラグ
     });
     
     return setCorsHeaders(nextResponse);
