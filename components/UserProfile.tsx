@@ -12,7 +12,7 @@ export default function UserProfile({
   onOpenHistory,
   onOpenInventory,
 }: UserProfileProps) {
-  const { user, session, signOut } = useAuth()
+  const { user, session, signOut, forceSignOut } = useAuth()
   const [loading, setLoading] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
@@ -20,11 +20,29 @@ export default function UserProfile({
   const handleSignOut = async () => {
     setLoading(true)
     try {
-      await signOut()
+      const { error } = await signOut()
+      if (error) {
+        console.warn('通常のログアウトに失敗しました。強制ログアウトを試行します:', error)
+        // エラーが発生した場合は強制ログアウトを試行
+        await forceSignOut()
+        // ページをリロードして状態をリセット
+        window.location.reload()
+      }
     } catch (error) {
       console.error('ログアウトエラー:', error)
+      // 例外が発生した場合も強制ログアウトを試行
+      try {
+        await forceSignOut()
+        window.location.reload()
+      } catch (forceError) {
+        console.error('強制ログアウトも失敗しました:', forceError)
+        setLoading(false)
+      }
     } finally {
-      setLoading(false)
+      // エラーがなければ通常通り終了
+      if (!loading) {
+        setLoading(false)
+      }
     }
   }
 

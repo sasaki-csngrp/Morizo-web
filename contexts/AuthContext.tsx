@@ -12,6 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signInWithGoogle: () => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
+  forceSignOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -68,8 +69,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
+    try {
+      const { error } = await supabase.auth.signOut()
+      // エラーが発生しても、ローカル状態をクリア
+      if (error) {
+        console.warn('ログアウトエラー:', error)
+        // エラーが発生しても状態をリセット
+        setSession(null)
+        setUser(null)
+      }
+      return { error }
+    } catch (err) {
+      console.error('ログアウト例外:', err)
+      // 例外が発生しても状態をリセット
+      setSession(null)
+      setUser(null)
+      return { error: err }
+    }
+  }
+
+  // 強制ログアウト: エラーが発生しても認証状態を完全にリセット
+  const forceSignOut = async () => {
+    try {
+      // Supabaseのログアウトを試行
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.warn('強制ログアウト: Supabaseログアウトエラー（無視）:', err)
+    }
+
+    // ローカルストレージとセッションストレージをクリア
+    try {
+      // Supabase関連のストレージをクリア
+      if (typeof window !== 'undefined') {
+        const keysToRemove: string[] = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+            keysToRemove.push(key)
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key))
+
+        // セッションストレージもクリア
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i)
+          if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+            sessionStorage.removeItem(key)
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('強制ログアウト: ストレージクリアエラー（無視）:', err)
+    }
+
+    // 状態を強制的にリセット
+    setSession(null)
+    setUser(null)
   }
 
   const value = {
@@ -80,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signInWithGoogle,
     signOut,
+    forceSignOut,
   }
 
   return (
