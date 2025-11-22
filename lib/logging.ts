@@ -64,6 +64,15 @@ class Logger {
   }
 
   private setupLogRotation(): void {
+    // 環境変数LOG_INITIALIZE_BACKUPで制御可能（デフォルト: true）
+    // 本番環境でlogrotateを使用する場合はfalseに設定
+    const shouldBackup = process.env.LOG_INITIALIZE_BACKUP !== 'false';
+    
+    if (!shouldBackup) {
+      console.log('📁 [LOGGING] logrotate使用（起動時バックアップ無効）');
+      return;
+    }
+
     const logPath = path.join(this.logDir, this.config.logFile);
     const backupPath = path.join(this.logDir, `${this.config.logFile}.1`);
 

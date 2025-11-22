@@ -1,0 +1,16 @@
+# Morizo Web ログローテーション設定
+# 本番環境では /etc/logrotate.d/morizo-web に配置してください
+
+/opt/morizo/Morizo-web/logs/morizo_web*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    missingok
+    create 0644 sasaki sasaki
+    postrotate
+        systemctl reload morizo-web > /dev/null 2>&1 || true
+    endscript
+}
+
