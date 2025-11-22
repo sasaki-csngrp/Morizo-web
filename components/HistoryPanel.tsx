@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { authenticatedFetch } from '@/lib/auth';
 import IngredientDeleteModal from './IngredientDeleteModal';
+import RecipeRatingModal from './RecipeRatingModal';
 
 interface HistoryRecipe {
   category: string | null;
@@ -11,6 +12,9 @@ interface HistoryRecipe {
   url?: string;
   history_id: string;
   duplicate_warning?: string;
+  rating?: number;
+  notes?: string;
+  image_url?: string;
 }
 
 interface HistoryEntry {
@@ -31,6 +35,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<HistoryRecipe | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -89,6 +95,16 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
     );
     // 履歴を再読み込み（オプション）
     // loadHistory();
+  };
+
+  const handleRecipeClick = (recipe: HistoryRecipe) => {
+    setSelectedRecipe(recipe);
+    setIsRatingModalOpen(true);
+  };
+
+  const handleRatingSave = async (rating: number | null, notes: string) => {
+    // 履歴を再読み込みして最新の評価・コメントを反映
+    await loadHistory();
   };
 
   if (!isOpen) return null;
@@ -201,7 +217,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
                   {entry.recipes.map((recipe, recipeIndex) => (
                     <div
                       key={recipeIndex}
-                      className={`p-3 rounded-lg ${
+                      onClick={() => handleRecipeClick(recipe)}
+                      className={`p-3 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors ${
                         recipe.duplicate_warning
                           ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
                           : 'bg-gray-50 dark:bg-gray-700'
@@ -212,9 +229,34 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
                           {getCategoryIcon(recipe.category)}
                         </span>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-800 dark:text-white">
-                            {recipe.title.replace(/^(主菜|副菜|汁物):\s*/, '')}
-                          </p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-800 dark:text-white">
+                              {recipe.title.replace(/^(主菜|副菜|汁物):\s*/, '')}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              {/* 評価アイコン */}
+                              {recipe.rating && (
+                                <span 
+                                  className={`text-lg ${
+                                    recipe.rating === 5 
+                                      ? 'text-red-500' 
+                                      : recipe.rating === 3 
+                                      ? 'text-gray-400' 
+                                      : 'text-purple-600 dark:text-purple-500'
+                                  }`} 
+                                  title="評価済み"
+                                >
+                                  {recipe.rating === 5 ? '❤️' : recipe.rating === 3 ? '🩶' : '💔'}
+                                </span>
+                              )}
+                              {/* コメントアイコン */}
+                              {recipe.notes && (
+                                <span className="text-blue-500 text-lg" title="コメントあり">
+                                  💬
+                                </span>
+                              )}
+                            </div>
+                          </div>
                           {recipe.duplicate_warning && (
                             <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
                               ⚠️ 重複警告（{recipe.duplicate_warning}）
@@ -237,6 +279,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onDeleteComplete={handleDeleteComplete}
+      />
+
+      {/* 評価モーダル */}
+      <RecipeRatingModal
+        isOpen={isRatingModalOpen}
+        onClose={() => setIsRatingModalOpen(false)}
+        recipe={selectedRecipe}
+        onSave={handleRatingSave}
       />
     </div>
   );
