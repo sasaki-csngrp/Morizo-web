@@ -58,7 +58,7 @@ const RecipeRatingModal: React.FC<RecipeRatingModalProps> = ({
           },
           body: JSON.stringify({
             rating: selectedRating,
-            notes: notes.trim() || null,
+            notes: notes.trim() === '' ? null : notes.trim(),
           }),
         }
       );
