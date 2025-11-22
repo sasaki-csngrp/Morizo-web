@@ -207,6 +207,10 @@ export function validateRecipeUrl(url: unknown): ParseResult<RecipeUrl> {
       title: urlObj.title as string,
       url: urlObj.url as string,
       domain: urlObj.domain as string,
+      // image_urlが存在する場合は設定
+      ...(urlObj.image_url && typeof urlObj.image_url === 'string' 
+        ? { image_url: urlObj.image_url } 
+        : {}),
     };
 
     return {
