@@ -32,6 +32,87 @@ const RecipeListModal: React.FC<RecipeListModalProps> = ({
                      selectionInfo?.currentStage === 'sub' ? '副菜' : 
                      selectionInfo?.currentStage === 'soup' ? '汁物' : '';
 
+  // 不足食材チェックから除外する食材リスト（一般的な調味料・水など）
+  const EXCLUDED_INGREDIENTS = [
+    '水',
+    'はちみつ',
+    'ハチミツ',
+    '塩',
+    'こしょう',
+    '胡椒',
+    'コショウ',
+    '醤油',
+    'しょうゆ',
+    '味噌',
+    'みそ',
+    '砂糖',
+    'みりん',
+    '酒',
+    '料理酒',
+    '酢',
+    '油',
+    'サラダ油',
+    'オリーブオイル',
+    'ごま油',
+    'バター',
+    'マヨネーズ',
+    'ケチャップ',
+    'ウスターソース',
+    'オイスターソース',
+    '豆板醤',
+    '甜麺醤',
+    '味の素',
+    'だし',
+    'だしの素',
+    'コンソメ',
+    '顆粒だし',
+    'チューブ生姜',
+    'チューブにんにく',
+    'ネギ分', // 「ネギ分」のような表記も除外
+    'ブラックペッパー',
+    'ブラックペッパ',
+    'ペッパー',
+    'ガーリックパウダー',
+    'ガーリックパウダ',
+    'にんにくパウダー',
+    'にんにくパウダ',
+    'パルメザンチーズ',
+    'パルメザン',
+    'パルメザンチーズ粉',
+  ].map(ing => ing.toLowerCase());
+
+  // 不足食材を判定する関数
+  const getMissingIngredients = (recipeIngredients: string[]): string[] => {
+    if (!selectionInfo?.usedIngredients || selectionInfo.usedIngredients.length === 0) {
+      return []; // 使える食材情報がない場合は判定しない
+    }
+
+    const usedIngredientsSet = new Set(
+      selectionInfo.usedIngredients.map(ing => ing.trim().toLowerCase())
+    );
+
+    return recipeIngredients.filter(ingredient => {
+      const normalizedIngredient = ingredient.trim().toLowerCase();
+      
+      // 除外リストに含まれる食材は不足食材として判定しない
+      if (EXCLUDED_INGREDIENTS.some(excluded => 
+        normalizedIngredient.includes(excluded) || excluded.includes(normalizedIngredient)
+      )) {
+        return false;
+      }
+
+      // 完全一致をチェック
+      if (usedIngredientsSet.has(normalizedIngredient)) {
+        return false;
+      }
+      // 部分一致もチェック（「豚バラ肉」と「豚バラ」など）
+      const isContained = Array.from(usedIngredientsSet).some(usedIng => 
+        normalizedIngredient.includes(usedIng) || usedIng.includes(normalizedIngredient)
+      );
+      return !isContained;
+    });
+  };
+
   // 決定ボタンのクリックハンドラー
   const handleConfirm = async () => {
     if (!selectionInfo || selectedIndex === null) return;
@@ -186,9 +267,51 @@ const RecipeListModal: React.FC<RecipeListModalProps> = ({
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                       📋 使用食材
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {candidate.ingredients.join(', ')}
-                    </p>
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      {(() => {
+                        const missingIngredients = getMissingIngredients(candidate.ingredients);
+                        const availableIngredients = candidate.ingredients.filter(
+                          ing => !missingIngredients.includes(ing)
+                        );
+                        
+                        return (
+                          <>
+                            {availableIngredients.length > 0 && (
+                              <span>{availableIngredients.join(', ')}</span>
+                            )}
+                            {missingIngredients.length > 0 && (
+                              <>
+                                {availableIngredients.length > 0 && <span>, </span>}
+                                <span className="inline-flex flex-wrap gap-1">
+                                  {missingIngredients.map((ingredient, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-300 dark:border-red-700"
+                                      title="使える食材に含まれていません"
+                                    >
+                                      ⚠️ {ingredient}
+                                    </span>
+                                  ))}
+                                </span>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                    {(() => {
+                      const missingIngredients = getMissingIngredients(candidate.ingredients);
+                      if (missingIngredients.length > 0) {
+                        return (
+                          <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                              ⚠️ {missingIngredients.length}種類の食材が使える食材に含まれていません
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                   
                   {/* 調理時間 */}

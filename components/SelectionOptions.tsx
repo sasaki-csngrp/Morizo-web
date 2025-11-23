@@ -259,7 +259,8 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
                 onSelect,
                 currentStage,
                 onNextStageRequested,
-                isLoading
+                isLoading,
+                usedIngredients // 使える食材リストを渡す
               };
               onViewList(candidates, selectionInfo);
             }}
