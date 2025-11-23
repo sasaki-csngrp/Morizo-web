@@ -66,6 +66,30 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleRecipeDelete = async (e: React.MouseEvent, recipe: HistoryRecipe) => {
+    e.stopPropagation(); // レシピクリックイベントの伝播を防ぐ
+    
+    if (!confirm(`「${recipe.title.replace(/^(主菜|副菜|汁物):\s*/, '')}」を削除しますか？`)) {
+      return;
+    }
+    
+    try {
+      const response = await authenticatedFetch(`/api/menu/history/${recipe.history_id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // 削除成功後、履歴を再読み込み
+      await loadHistory();
+    } catch (error) {
+      console.error('Recipe delete failed:', error);
+      alert('削除に失敗しました');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const days = ['日', '月', '火', '水', '木', '金', '土'];
@@ -128,7 +152,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
         <div className="space-y-3">
           <div>
             <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
-              期間: {days}日間
+              期間: {days === 0 ? 'それ以前' : `${days}日間`}
             </label>
             <div className="flex gap-2">
               <button
@@ -160,6 +184,16 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
                 }`}
               >
                 30日
+              </button>
+              <button
+                onClick={() => setDays(0)}
+                className={`px-3 py-1 rounded text-sm ${
+                  days === 0
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                それ以前
               </button>
             </div>
           </div>
@@ -254,6 +288,16 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
                                 <span className="text-blue-500 text-lg" title="コメントあり">
                                   💬
                                 </span>
+                              )}
+                              {/* 削除ボタン（それ以前選択時のみ表示） */}
+                              {days === 0 && (
+                                <button
+                                  onClick={(e) => handleRecipeDelete(e, recipe)}
+                                  className="text-red-500 hover:text-red-700 text-lg px-1"
+                                  title="削除"
+                                >
+                                  🗑️
+                                </button>
                               )}
                             </div>
                           </div>
