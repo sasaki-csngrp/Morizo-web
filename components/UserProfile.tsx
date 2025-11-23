@@ -2,20 +2,39 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import InventorySelectionModal from '@/components/InventorySelectionModal'
+import OtherProposalSelectionModal from '@/components/OtherProposalSelectionModal'
+
+interface InventoryItem {
+  id: string;
+  item_name: string;
+  quantity: number;
+  unit: string;
+  storage_location: string | null;
+  expiry_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 interface UserProfileProps {
   onOpenHistory?: () => void;
   onOpenInventory?: () => void;
+  onRequestMainProposal?: (mainIngredient?: string) => void;
+  onRequestOtherProposal?: (message: string) => void;
 }
 
 export default function UserProfile({
   onOpenHistory,
   onOpenInventory,
+  onRequestMainProposal,
+  onRequestOtherProposal,
 }: UserProfileProps) {
   const { user, session, signOut, forceSignOut } = useAuth()
   const [loading, setLoading] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
+  const [isInventorySelectionModalOpen, setIsInventorySelectionModalOpen] = useState(false)
+  const [isOtherProposalSelectionModalOpen, setIsOtherProposalSelectionModalOpen] = useState(false)
 
   const handleSignOut = async () => {
     setLoading(true)
@@ -67,10 +86,82 @@ export default function UserProfile({
     }
   }
 
+  const handleOpenMainProposal = () => {
+    setIsInventorySelectionModalOpen(true)
+  }
+
+  const handleInventorySelect = (selectedItem: InventoryItem | null) => {
+    setIsInventorySelectionModalOpen(false)
+    if (onRequestMainProposal) {
+      // 選択された在庫がある場合はアイテム名を主要食材として使用
+      const mainIngredient = selectedItem ? selectedItem.item_name : undefined
+      onRequestMainProposal(mainIngredient)
+    }
+  }
+
+  const handleOpenOtherProposal = () => {
+    setIsOtherProposalSelectionModalOpen(true)
+  }
+
+  const handleOtherProposalSelect = (message: string) => {
+    setIsOtherProposalSelectionModalOpen(false)
+    if (onRequestOtherProposal) {
+      onRequestOtherProposal(message)
+    }
+  }
+
   return (
     <>
       {/* ユーザーアイコンとボタン */}
       <div className="flex items-center justify-end gap-2 mb-4">
+        {/* 主菜提案ボタン */}
+        {onRequestMainProposal && (
+          <button
+            onClick={handleOpenMainProposal}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="主菜提案を開始"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+            <span className="text-sm font-medium">主菜提案</span>
+          </button>
+        )}
+
+        {/* その他提案ボタン */}
+        {onRequestOtherProposal && (
+          <button
+            onClick={handleOpenOtherProposal}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+            aria-label="その他提案を開始"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+            <span className="text-sm font-medium">その他提案</span>
+          </button>
+        )}
+
         {/* 在庫一覧ボタン */}
         {onOpenInventory && (
           <button
@@ -230,6 +321,20 @@ export default function UserProfile({
           </div>
         </div>
       )}
+
+      {/* 在庫選択モーダル */}
+      <InventorySelectionModal
+        isOpen={isInventorySelectionModalOpen}
+        onClose={() => setIsInventorySelectionModalOpen(false)}
+        onSelect={handleInventorySelect}
+      />
+
+      {/* その他提案選択モーダル */}
+      <OtherProposalSelectionModal
+        isOpen={isOtherProposalSelectionModalOpen}
+        onClose={() => setIsOtherProposalSelectionModalOpen(false)}
+        onSelect={handleOtherProposalSelect}
+      />
     </>
   )
 }
