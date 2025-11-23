@@ -187,24 +187,16 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 
   // Phase 3D: 段階名の表示テキスト
   const stageLabel = currentStage === 'main' ? '主菜' : currentStage === 'sub' ? '副菜' : currentStage === 'soup' ? '汁物' : currentStage === 'other' ? 'その他' : '';
-  const menuCategoryLabel = menuCategory === 'japanese' ? '和食' : menuCategory === 'western' ? '洋食' : menuCategory === 'chinese' ? '中華' : '';
 
   return (
     <div className="mt-6 p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
       {/* Phase 3D: 段階情報の表示 */}
-      {(currentStage || menuCategory) && (
+      {currentStage && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <div className="flex flex-wrap gap-2 items-center text-sm">
-            {currentStage && (
-              <span className="px-3 py-1 bg-blue-600 text-white rounded-full font-medium">
-                {stageLabel}を選んでください
-              </span>
-            )}
-            {menuCategory && (
-              <span className="px-3 py-1 bg-indigo-600 text-white rounded-full font-medium">
-                {menuCategoryLabel}
-              </span>
-            )}
+            <span className="px-3 py-1 bg-blue-600 text-white rounded-full font-medium">
+              {stageLabel}を選んでください
+            </span>
           </div>
         </div>
       )}
