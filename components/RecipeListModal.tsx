@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { RecipeCandidate } from '@/types/menu';
+import React, { useState, useEffect, useMemo } from 'react';
+import { RecipeCandidate, CheckMissingIngredientsResponse } from '@/types/menu';
 import ImageHandler from './ImageHandler';
 import { RecipeListModalSelectionInfo } from '@/hooks/useModalManagement';
 import { authenticatedFetch } from '@/lib/auth';
@@ -26,92 +26,78 @@ const RecipeListModal: React.FC<RecipeListModalProps> = ({
     message: string;
     nextStageName: string;
   } | null>(null);
+  const [missingIngredientsMap, setMissingIngredientsMap] = useState<Map<number, string[]>>(new Map());
+  const [isCheckingIngredients, setIsCheckingIngredients] = useState(false);
 
   // 段階名の表示テキスト
   const stageLabel = selectionInfo?.currentStage === 'main' ? '主菜' : 
                      selectionInfo?.currentStage === 'sub' ? '副菜' : 
                      selectionInfo?.currentStage === 'soup' ? '汁物' : '';
 
-  // 不足食材チェックから除外する食材リスト（一般的な調味料・水など）
-  const EXCLUDED_INGREDIENTS = [
-    '水',
-    'はちみつ',
-    'ハチミツ',
-    '塩',
-    'こしょう',
-    '胡椒',
-    'コショウ',
-    '醤油',
-    'しょうゆ',
-    '味噌',
-    'みそ',
-    '砂糖',
-    'みりん',
-    '酒',
-    '料理酒',
-    '酢',
-    '油',
-    'サラダ油',
-    'オリーブオイル',
-    'ごま油',
-    'バター',
-    'マヨネーズ',
-    'ケチャップ',
-    'ウスターソース',
-    'オイスターソース',
-    '豆板醤',
-    '甜麺醤',
-    '味の素',
-    'だし',
-    'だしの素',
-    'コンソメ',
-    '顆粒だし',
-    'チューブ生姜',
-    'チューブにんにく',
-    'ネギ分', // 「ネギ分」のような表記も除外
-    'ブラックペッパー',
-    'ブラックペッパ',
-    'ペッパー',
-    'ガーリックパウダー',
-    'ガーリックパウダ',
-    'にんにくパウダー',
-    'にんにくパウダ',
-    'パルメザンチーズ',
-    'パルメザン',
-    'パルメザンチーズ粉',
-  ].map(ing => ing.toLowerCase());
+  // 不足食材をチェックする関数（API呼び出し）
+  const checkMissingIngredients = async (
+    recipeIngredients: string[],
+    availableIngredients: string[]
+  ): Promise<string[]> => {
+    try {
+      const response = await authenticatedFetch('/api/recipe/ingredients/check-missing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipeIngredients,
+          availableIngredients,
+        }),
+      });
 
-  // 不足食材を判定する関数
-  const getMissingIngredients = (recipeIngredients: string[]): string[] => {
-    if (!selectionInfo?.usedIngredients || selectionInfo.usedIngredients.length === 0) {
-      return []; // 使える食材情報がない場合は判定しない
+      if (!response.ok) {
+        console.error('不足食材チェックに失敗しました:', response.status);
+        return [];
+      }
+
+      const result: CheckMissingIngredientsResponse = await response.json();
+      if (result.success) {
+        return result.missingIngredients || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('不足食材チェックエラー:', error);
+      return [];
+    }
+  };
+
+  // 各候補の不足食材をチェック
+  useEffect(() => {
+    if (!isOpen || !selectionInfo?.usedIngredients || candidates.length === 0) {
+      return;
     }
 
-    const usedIngredientsSet = new Set(
-      selectionInfo.usedIngredients.map(ing => ing.trim().toLowerCase())
-    );
+    const checkAllIngredients = async () => {
+      setIsCheckingIngredients(true);
+      const newMap = new Map<number, string[]>();
 
-    return recipeIngredients.filter(ingredient => {
-      const normalizedIngredient = ingredient.trim().toLowerCase();
-      
-      // 除外リストに含まれる食材は不足食材として判定しない
-      if (EXCLUDED_INGREDIENTS.some(excluded => 
-        normalizedIngredient.includes(excluded) || excluded.includes(normalizedIngredient)
-      )) {
-        return false;
-      }
+      // 各候補の不足食材を並列でチェック
+      const checkPromises = candidates.map(async (candidate, index) => {
+        if (candidate.ingredients && candidate.ingredients.length > 0) {
+          const missing = await checkMissingIngredients(
+            candidate.ingredients,
+            selectionInfo.usedIngredients || []
+          );
+          if (missing.length > 0) {
+            newMap.set(index, missing);
+          }
+        }
+      });
 
-      // 完全一致をチェック
-      if (usedIngredientsSet.has(normalizedIngredient)) {
-        return false;
-      }
-      // 部分一致もチェック（「豚バラ肉」と「豚バラ」など）
-      const isContained = Array.from(usedIngredientsSet).some(usedIng => 
-        normalizedIngredient.includes(usedIng) || usedIng.includes(normalizedIngredient)
-      );
-      return !isContained;
-    });
-  };
+      await Promise.all(checkPromises);
+      setMissingIngredientsMap(newMap);
+      setIsCheckingIngredients(false);
+    };
+
+    checkAllIngredients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, candidates.length, selectionInfo?.usedIngredients?.join(',')]);
 
   // 決定ボタンのクリックハンドラー
   const handleConfirm = async () => {
@@ -269,7 +255,7 @@ const RecipeListModal: React.FC<RecipeListModalProps> = ({
                     </div>
                     <div className="text-sm text-gray-700 dark:text-gray-300">
                       {(() => {
-                        const missingIngredients = getMissingIngredients(candidate.ingredients);
+                        const missingIngredients = missingIngredientsMap.get(index) || [];
                         const availableIngredients = candidate.ingredients.filter(
                           ing => !missingIngredients.includes(ing)
                         );
@@ -300,7 +286,7 @@ const RecipeListModal: React.FC<RecipeListModalProps> = ({
                       })()}
                     </div>
                     {(() => {
-                      const missingIngredients = getMissingIngredients(candidate.ingredients);
+                      const missingIngredients = missingIngredientsMap.get(index) || [];
                       if (missingIngredients.length > 0) {
                         return (
                           <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
