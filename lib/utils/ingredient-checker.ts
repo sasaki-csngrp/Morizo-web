@@ -79,6 +79,10 @@ const EXCLUDED_INGREDIENTS = [
   'ベーキングパウダ',
   'カレールー',
   'カレー粉',
+  '米粉',
+  'こめこ',
+  'クレージーソルト',
+  'コーンスターチ',
 ].map(ing => ing.toLowerCase());
 
 /**
