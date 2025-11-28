@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import InventorySelectionModal from '@/components/InventorySelectionModal'
 import OtherProposalSelectionModal from '@/components/OtherProposalSelectionModal'
+import { authenticatedFetch } from '@/lib/auth'
 
 interface InventoryItem {
   id: string;
@@ -35,6 +36,8 @@ export default function UserProfile({
   const [copySuccess, setCopySuccess] = useState(false)
   const [isInventorySelectionModalOpen, setIsInventorySelectionModalOpen] = useState(false)
   const [isOtherProposalSelectionModalOpen, setIsOtherProposalSelectionModalOpen] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handleSignOut = async () => {
     setLoading(true)
@@ -107,6 +110,39 @@ export default function UserProfile({
     setIsOtherProposalSelectionModalOpen(false)
     if (onRequestOtherProposal) {
       onRequestOtherProposal(message)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await authenticatedFetch('/api/user/account', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'アカウント削除に失敗しました' }))
+        throw new Error(errorData.error || errorData.details || 'アカウント削除に失敗しました')
+      }
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // 削除成功後、ログアウト処理を実行
+        await forceSignOut()
+        // ページをリロードしてログイン画面に遷移
+        window.location.href = '/'
+      } else {
+        throw new Error(data.message || 'アカウント削除に失敗しました')
+      }
+    } catch (error) {
+      console.error('アカウント削除エラー:', error)
+      alert(error instanceof Error ? error.message : 'アカウント削除に失敗しました')
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -290,6 +326,15 @@ export default function UserProfile({
                 {loading ? 'ログアウト中...' : 'ログアウト'}
               </button>
 
+              {/* アカウント削除 */}
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isDeleting}
+                className="w-full bg-red-800 hover:bg-red-900 disabled:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+              >
+                {isDeleting ? '削除中...' : 'アカウントを削除'}
+              </button>
+
               {/* 閉じる */}
               <button
                 onClick={() => setShowProfileModal(false)}
@@ -335,6 +380,54 @@ export default function UserProfile({
         onClose={() => setIsOtherProposalSelectionModalOpen(false)}
         onSelect={handleOtherProposalSelect}
       />
+
+      {/* アカウント削除確認ダイアログ */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* オーバーレイ */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+            onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+            aria-hidden="true"
+          />
+          
+          {/* 確認ダイアログ */}
+          <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+              アカウントを削除しますか？
+            </h3>
+            
+            <div className="mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-2">
+                この操作は取り消せません。すべてのデータが削除されます。
+              </p>
+              <ul className="text-sm text-gray-500 dark:text-gray-400 list-disc list-inside space-y-1">
+                <li>在庫データ</li>
+                <li>レシピ履歴</li>
+                <li>ユーザー設定</li>
+                <li>その他のすべてのデータ</li>
+              </ul>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+              >
+                {isDeleting ? '削除中...' : '削除する'}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
