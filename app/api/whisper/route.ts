@@ -8,7 +8,12 @@ const openai = new OpenAI({
 
 // CORSヘッダーを設定するヘルパー関数
 function setCorsHeaders(response: NextResponse) {
-  response.headers.set('Access-Control-Allow-Origin', '*');
+  // 本番環境では特定のオリジンのみ許可
+  const allowedOrigin = process.env.NODE_ENV === 'production' 
+    ? 'https://morizo.csngrp.co.jp'
+    : '*'; // 開発環境では全許可
+  
+  response.headers.set('Access-Control-Allow-Origin', allowedOrigin);
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   response.headers.set('Access-Control-Max-Age', '86400');
@@ -51,6 +56,35 @@ export async function POST(request: NextRequest) {
       ServerLogger.warn(LogCategory.VOICE, '音声ファイルが見つかりません', { requestId });
       const response = NextResponse.json(
         { error: '音声ファイルが見つかりません' },
+        { status: 400 }
+      );
+      return setCorsHeaders(response);
+    }
+
+    // ファイルサイズの制限（10MB）
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (audioFile.size > MAX_FILE_SIZE) {
+      ServerLogger.warn(LogCategory.VOICE, 'ファイルサイズが上限を超えています', { 
+        requestId,
+        fileSize: audioFile.size,
+        maxSize: MAX_FILE_SIZE
+      });
+      const response = NextResponse.json(
+        { error: 'ファイルサイズが上限（10MB）を超えています' },
+        { status: 400 }
+      );
+      return setCorsHeaders(response);
+    }
+
+    // ファイル形式の検証
+    const allowedMimeTypes = ['audio/mpeg', 'audio/wav', 'audio/webm', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'];
+    if (!allowedMimeTypes.includes(audioFile.type)) {
+      ServerLogger.warn(LogCategory.VOICE, '許可されていないファイル形式です', { 
+        requestId,
+        fileType: audioFile.type
+      });
+      const response = NextResponse.json(
+        { error: '許可されていないファイル形式です。対応形式: MP3, WAV, WebM, OGG, M4A' },
         { status: 400 }
       );
       return setCorsHeaders(response);
