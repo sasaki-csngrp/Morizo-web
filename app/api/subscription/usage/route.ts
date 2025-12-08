@@ -57,10 +57,19 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await aiResponse.json();
+    
+    // 利用回数の値を取得
+    const menuBulkCount = data.menu_bulk_count || 0;
+    const menuStepCount = data.menu_step_count || 0;
+    const ocrCount = data.ocr_count || 0;
+    
     ServerLogger.info(LogCategory.API, 'Morizo AIからのレスポンス受信完了', { 
       success: data.success,
       date: data.date,
-      planType: data.plan_type
+      planType: data.plan_type,
+      menu_bulk_count: menuBulkCount,
+      menu_step_count: menuStepCount,
+      ocr_count: ocrCount
     });
 
     timer();
